@@ -68,6 +68,13 @@ export const login = async(req, res)=>{
 
         const token = await jwt.sign({userId:user._id}, ENV.JWT_TOKEN)
 
+        if(user.email===ENV.ADMIN_EMAIL){
+            const token = await jwt.sign({userId:user._id}, ENV.JWT_TOKEN)
+            return res.status(201).cookie("token", token, {maxAge:1*24*60*60*1000, http:true, sameSite:"none"}).json({
+            message:`welcome back Admin ${user.name}`
+            })
+        }
+
         return res.status(201).cookie("token", token, {maxAge:1*24*60*60*1000, http:true, sameSite:"none"}).json({
             message:`welcome ${user.name}`
         })
@@ -76,3 +83,39 @@ export const login = async(req, res)=>{
         console.log(`error from login, ${error}`)
     }
 }
+
+export const getUser = async(req, res)=>{
+    try {
+        const userId = req.id;
+        const user = await User.findById(userId)
+        if(!user){
+            return res.status(401).json({
+                message:"User Not Found"
+            })
+        }
+
+        return res.status(201).json(user)
+        
+    } catch (error) {
+        console.log(`error from getUser, ${error}`)
+    }
+}
+
+export const getCartItem = async(req,res)=>{
+    try {
+        const userId = req.id;
+        
+        const user = await User.findById(userId).populate("cartItem")
+
+        if(!user){
+            return res.status(401).json({
+                message:"User not Found"
+            })
+        }
+
+        return res.status(201).json(user)
+    } catch (error) {
+        console.log(`error from getCartItem, ${error}`);
+    }
+}
+
