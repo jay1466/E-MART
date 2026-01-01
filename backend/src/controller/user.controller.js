@@ -2,6 +2,7 @@ import { User } from "../model/user.model.js";
 import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken"
 import { ENV } from "../config/env.js";
+import cloudinary from "../config/cloudinary.js";
 
 export const register = async(req, res)=>{
     try {
@@ -119,3 +120,44 @@ export const getCartItem = async(req,res)=>{
     }
 }
 
+export const updateProfile = async(req, res)=>{
+    try {
+        const userId = req.id;
+
+        const {name} = req.body;
+
+        const updateData = {}
+
+        if(name){
+            updateData.name = name
+        }
+
+        if(req.file){
+            const base64 = `data:${req.file.mimetype};base64, ${req.file.buffer.toString('base64')}`
+
+            const uploadRes = await cloudinary.uploader.upload(base64,{
+                folder:"ProfilePhoto"
+            })
+
+            updateData.profilePhoto = uploadRes.secure_url
+        }
+        const user = await User.findByIdAndUpdate(
+            userId,
+            updateData,
+            {new:true, runValidators:true}
+        ).select('-password')
+
+        if(!user){
+            return res.status(401).json({
+                message:"User not Found"
+            })
+        }
+
+        return res.status(201).json({
+            message:"Profile Updated Successfully"
+        })
+
+    } catch (error) {
+        console.log(`error from updateProfile, ${error}`);
+    }
+}
