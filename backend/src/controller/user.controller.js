@@ -50,7 +50,7 @@ export const login = async(req, res)=>{
             })
         }
 
-        const users = await User.findOne({email})
+        const user = await User.findOne({email})
 
         if(!user){
             return res.status(401).json({
@@ -133,7 +133,7 @@ export const updateProfile = async(req, res)=>{
         }
 
         if(req.file){
-            const base64 = `data:${req.file.mimetype};base64, ${req.file.buffer.toString('base64')}`
+            const base64 = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`
 
             const uploadRes = await cloudinary.uploader.upload(base64,{
                 folder:"ProfilePhoto"
@@ -158,6 +158,9 @@ export const updateProfile = async(req, res)=>{
         })
 
     } catch (error) {
-        console.log(`error from updateProfile, ${error}`);
+        console.log(`error from updateProfile, ${error.message || JSON.stringify(error)}`);
+        return res.status(500).json({
+            message: "Internal server error"
+        });
     }
 }
